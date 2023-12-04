@@ -1,2 +1,4 @@
 /.ammonite/
 /.metals/
+/.bsp/
+/.scala-build/
