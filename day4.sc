@@ -21,7 +21,6 @@ def part1() = {
     .map(xs => xs._1.intersect(xs._2))
     .map(xs => scala.math.pow(2, xs.size - 1).intValue)
     .sum
-    // .toList
 
   pprintln(res)
 }
@@ -29,22 +28,27 @@ def part1() = {
 part1()
 
 
+def countScratchcards(xs: List[(Int, Int)]): Int = {
+  xs match {
+    case Nil => 0
+    case (matches, copies) :: next => {
+      val newNext = next.patch(0, next.take(matches).map(x => (x._1, x._2 + copies)), matches)
+      copies + countScratchcards(newNext)
+    }
+  }
+}
+
 def part2() = {
   val input = Source
-    .fromFile("./day4-input-example.txt")
+    .fromFile("./day4-input.txt")
     .getLines
     .filter(!_.isBlank())
     .map(parseLine)
 
-  val res = input
-    .zipWithIndex
-    .map(x => (x._1, x._2, 1))
-    // .(x => x._1._1.intersect(x._1._2))
-    // .map(xs => scala.math.pow(2, xs.size - 1).intValue)
-    // .sum
-    .toList
+  val preprocessed = input.map(x => (x._1.intersect(x._2).size, 1)).toList
+  val result = countScratchcards(preprocessed)
 
-  pprintln(res)
+  pprintln(result)
 }
 
 part2()
