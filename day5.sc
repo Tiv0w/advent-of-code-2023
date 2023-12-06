@@ -1,5 +1,5 @@
 import scala.io.Source
-// import pprint.pprintln
+import pprint.pprintln
 
 
 implicit class PartitionByOnList[A](xs: List[A]) {
@@ -56,7 +56,7 @@ def parseMap(mapData: List[List[String]]): List[(Long, Long, Long)] = {
 
 def findLocationForSeed(seed: Long, maps: List[List[(Long, Long, Long)]]): Long = {
   maps.foldLeft(seed)((src, map) => {
-    map.find(r => (r._1 until (r._1 + r._3 + 1)).contains(src)) match {
+    map.find(r => (r._1 to (r._1 + r._3)).contains(src)) match {
       case None => src
       case Some((s, d, l)) => src - s + d
     }
@@ -78,10 +78,15 @@ def part1() = {
     .stripPrefix("seeds: ")
     .split(' ')
     .map(_.trim.toLong)
-    .iterator
-    .grouped(2)
-    .flatMap(x => x(0) until (x(0) + x(1)))
+    // .iterator
+    // .grouped(2)
+    // .flatMap(x => x(0) until (x(0) + x(1)))
+    // .length
+    // .toList
 
+
+  // pprintln(seeds)
+  // pprintln(seeds.distinct.size)
   // pprintln(seeds)
 
   val maps = input.tail.grouped(2).toList.map(parseMap)
@@ -97,4 +102,110 @@ def part1() = {
   println(locations.min)
 }
 
-part1()
+// part1()
+
+
+def part2() = {
+  val input = Source
+    .fromFile("./day5-input.txt")
+    .getLines
+    .filterNot(_.isBlank)
+    .toList
+    .partitionBy(_.endsWith("map:"))
+
+  val seeds = input
+    .head
+    .head
+    .stripPrefix("seeds: ")
+    .split(' ')
+    .map(_.trim.toLong)
+    .iterator
+    .grouped(2)
+    .flatMap(x => x(0) until (x(0) + x(1)))
+    // .length
+    // .toList
+
+
+  pprintln(seeds)
+  // pprintln(seeds.distinct.size)
+  // pprintln(seeds)
+
+  val maps = input.tail.grouped(2).toList.map(parseMap)
+
+  // pprintln(input)
+  // pprintln(seeds)
+  // pprintln(maps)
+  // pprintln(parseMap(maps.head))
+
+  val locations = seeds.map(findLocationForSeed(_, maps))
+
+  // pprintln(locations)
+  println(locations.min)
+}
+
+// part2()
+
+
+def findSeedForLocation(location: Long, maps: List[List[(Long, Long, Long)]]): Long = {
+  // maps.foldRight(location)((dest, map) => {
+  //   map.find(r => (r._1 to (r._1 + r._3)).contains(src)) match {
+  //     case None => src
+  //     case Some((s, d, l)) => src - s + d
+  //   }
+  // })
+
+  maps.foldRight(location)((map, dest) => {
+    map.find(r => (r._2 to (r._2 + r._3)).contains(dest)) match {
+      case None => dest
+      case Some((s, d, l)) => dest - d + s
+    }
+  })
+}
+
+
+def part2Optimized() = {
+  val input = Source
+    .fromFile("./day5-input.txt")
+    .getLines
+    .filterNot(_.isBlank)
+    .toList
+    .partitionBy(_.endsWith("map:"))
+
+  val seeds = input
+    .head
+    .head
+    .stripPrefix("seeds: ")
+    .split(' ')
+    .map(_.trim.toLong)
+    .iterator
+    .grouped(2)
+    .map(x => x(0) until (x(0) + x(1)))
+    // .length
+    .toList
+
+
+  pprintln(seeds.size)
+  // pprintln(seeds.distinct.size)
+  // pprintln(seeds)
+
+  val maps = input.tail.grouped(2).toList.map(parseMap)
+
+  // pprintln(input)
+  // pprintln(seeds)
+  // pprintln(maps)
+  // pprintln(parseMap(maps.head))
+
+  // val locations = seeds.map(findLocationForSeed(_, maps))
+
+  // pprintln(locations)
+  // println(locations.min)
+  val found = Iterator
+    .from(0)
+    .tapEach(x => if (x % 1_000_000 == 0) pprintln(x))
+    .find(x => seeds.exists(_.contains(findSeedForLocation(x, maps))))
+    .getOrElse(-1)
+
+  pprintln(found)
+}
+
+part2Optimized()
