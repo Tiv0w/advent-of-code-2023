@@ -1,5 +1,5 @@
 import scala.io.Source
-import pprint.pprintln
+// import pprint.pprintln
 
 
 implicit class PartitionByOnList[A](xs: List[A]) {
@@ -26,58 +26,75 @@ implicit class PartitionByOnList[A](xs: List[A]) {
 }
 
 
-def parseMap(mapData: List[List[String]]): (String, String, Map[Int, Int]) = {
-  val List(List(mapInfo), mapRanges) = mapData
-  val Array(srcCategory, _to, destCategory) = mapInfo.stripSuffix(" map:").split('-')
-  val ranges = mapRanges.map(_.split(' ').map(_.trim.toInt).toList)
-  pprintln(ranges)
-  // var map: Map[Int, Int] = Map().withDefault(x => x)
+// def parseMap(mapData: List[List[String]]): Map[Long, Long] = {
+//   val List(List(mapInfo), mapRanges) = mapData
+//   val Array(srcCategory, _to, destCategory) = mapInfo.stripSuffix(" map:").split('-')
+//   val ranges = mapRanges.map(_.split(' ').map(_.trim.toLong).toList)
 
-  val map: Map[Int, Int] = Map().withDefault(x => x)
+//   val finMap: Map[Long, Long] = ranges.foldLeft(Map.empty)((map, range) => {
+//     val List(dest, src, len) = range
+//     val currentMap: Map[Long, Long] = (0L until len).foldLeft(Map.empty)((acc, i: Long) =>
+//       acc.updated(src + i, dest + i))
+//     map ++ currentMap
+//   })
 
-  val finMap = ranges.foldLeft(Map[Int, Int]())((map, range) => {
-    val List(dest, src, len) = range
+//   return finMap.withDefault(x => x)
+// }
 
-    val r = (0 until len)
-    val mi: Map[Int, Int] = r.foldLeft(Map.empty)((acc, i) => acc.updated(src + i, dest + i))
+def parseMap(mapData: List[List[String]]): List[(Long, Long, Long)] = {
+  val List(List(_mapInfo), mapRanges) = mapData
+  val ranges = mapRanges.map(_.split(' ').map(_.trim.toLong).toList).map(x => (x(1), x(0), x(2)))
 
-    pprintln(mi)
 
-    map ++ mi
-    // for (i <- 0 until len) {
-    //   map = map.updated(src + i, dest + i)
-    // }
-  }).withDefault(x => x)
+  return ranges
+}
 
-  pprintln(finMap(98))
 
-  // ranges.foreach(range => {
-  //   val List(dest, src, len) = range
-  //   for (i <- 0 until len) {
-  //     map = map.updated(src + i, dest + i)
-  //   }
-  // })
+// def findLocationForSeed[A: Numeric](seed: A, maps: List[Map[A, A]]): A = {
+//   maps.foldLeft(seed)((src, map) => map(src))
+// }
 
-  return (srcCategory, destCategory, map)
+def findLocationForSeed(seed: Long, maps: List[List[(Long, Long, Long)]]): Long = {
+  maps.foldLeft(seed)((src, map) => {
+    map.find(r => (r._1 until (r._1 + r._3 + 1)).contains(src)) match {
+      case None => src
+      case Some((s, d, l)) => src - s + d
+    }
+  })
 }
 
 
 def part1() = {
   val input = Source
-    .fromFile("./day5-input-example.txt")
+    .fromFile("./day5-input.txt")
     .getLines
     .filterNot(_.isBlank)
     .toList
     .partitionBy(_.endsWith("map:"))
 
-  val seeds = input.head.head.stripPrefix("seeds: ").split(' ').map(_.trim.toInt)
+  val seeds = input
+    .head
+    .head
+    .stripPrefix("seeds: ")
+    .split(' ')
+    .map(_.trim.toLong)
+    .iterator
+    .grouped(2)
+    .flatMap(x => x(0) until (x(0) + x(1)))
 
-  val maps = input.tail.grouped(2).toList
+  // pprintln(seeds)
 
-  pprintln(input)
-  pprintln(seeds)
-  pprintln(maps)
-  pprintln(parseMap(maps.head))
+  val maps = input.tail.grouped(2).toList.map(parseMap)
+
+  // pprintln(input)
+  // pprintln(seeds)
+  // pprintln(maps)
+  // pprintln(parseMap(maps.head))
+
+  val locations = seeds.map(findLocationForSeed(_, maps))
+
+  // pprintln(locations)
+  println(locations.min)
 }
 
 part1()
