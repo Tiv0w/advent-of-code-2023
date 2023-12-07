@@ -93,27 +93,36 @@ part1()
 
 def getGearRatios(lines: List[String]): List[Int] = {
   val List(l1, l2, l3) = lines
-  val numbers = findNumbers(l2)
+  val width = l1.length
+  val gears: List[Int] = l2.zipWithIndex.filter(_._1 == '*').map(_._2).toList
+  val numbers = lines.map(findNumbers)
 
-  val numres = numbers
-    .map(number =>
-      (number, Range
-        .inclusive(number._1, number._2)
-        .flatMap(getNeighboursIndices(l1.length))
-        .distinct
-        .map(coords => lines(coords._2)(coords._1)))
-    )
-    .filter(number => number._2.exists(c => !c.isDigit && c != '.'))
-    .map(_._1)
-    .map(x => l2.slice(x._1, x._2 + 1).toInt)
+  gears
+    .map(gear => getNeighboursIndices(width)(gear).groupBy(_._2).map(_._2.map(_._1)))
+    .map(_.zip(numbers))
+    .flatMap(gear => {
+      val partNums = gear.map(line => {
+        val (neigh, nums) = line
+        nums.filter(num => neigh.exists(n => Range.inclusive(num._1, num._2).contains(n))).distinct
+      })
 
-  numres
+      val correctNums = partNums.zipWithIndex.flatMap(line => {
+        val (nums, lineIndex) = line
+        val correspondingLine = lines(lineIndex)
+        nums.map(num => correspondingLine.slice(num._1, num._2 + 1).toInt)
+      })
+
+      if (correctNums.size == 2)
+        Some(correctNums.product)
+      else
+        None
+    })
 }
 
 
 def part2() = {
   val input = Source
-    .fromFile("./examples/day3.txt")
+    .fromFile("./input/day3.txt")
     .getLines
     .filter(!_.isBlank)
     .toList
@@ -123,7 +132,8 @@ def part2() = {
     .prepended("." * width)
     .appended("." * width)
     .sliding(3)
-    .flatMap(getPartNumbers)
+    // .take(2)
+    .flatMap(getGearRatios)
     .toList
 
   // pprintln(result)
