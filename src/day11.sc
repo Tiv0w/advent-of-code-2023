@@ -54,23 +54,22 @@ def part1() = {
 part1()
 
 
-def findExpandingRows(universe: IndexedSeq[IndexedSeq[Char]]): IndexedSeq[Int] = {
+def findExpandingRows(universe: IndexedSeq[IndexedSeq[Char]]): IndexedSeq[Int] =
   universe
     .zipWithIndex
     .filter(_._1.forall(_ == '.'))
     .map(_._2)
-}
 
 
-def computeShortestPath(a: Coords, b: Coords, expandingRows: IndexedSeq[Int], expandingCols: IndexedSeq[Int], multiplier: Int): Int = {
+def computeShortestPath(a: Coords, b: Coords, expandingRows: IndexedSeq[Int], expandingCols: IndexedSeq[Int], multiplier: Long): Long = {
   val rows = expandingRows.filter(y => (a.y to b.y).contains(y) || (b.y to a.y).contains(y))
   val cols = expandingCols.filter(x => (a.x to b.x).contains(x) || (b.x to a.x).contains(x))
 
   (
     (a.x - b.x).abs +
       (a.y - b.y).abs +
-      cols.length * (multiplier - 1) +
-      rows.length * (multiplier - 1)
+      cols.length.toLong * (multiplier - 1) +
+      rows.length.toLong * (multiplier - 1)
   )
 }
 
@@ -111,7 +110,7 @@ def part2() = {
 
   val result = galaxies
     .combinations(2)
-    .map { case IndexedSeq(a, b) => computeShortestPath(a, b, expandingRows, expandingCols, 1000000) }
+    .map { case IndexedSeq(a, b) => computeShortestPath(a, b, expandingRows, expandingCols, 1_000_000L) }
     // .toList
 
   pprintln(result.sum)
