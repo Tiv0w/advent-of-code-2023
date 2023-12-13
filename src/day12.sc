@@ -10,32 +10,36 @@ def parseLine(s: String): Record  = {
   Record(pattern, groups.split(',').map(_.toInt).toIndexedSeq)
 }
 
-def evaluateRecord(r: Record): Int = {
-  val condition = r.groups == r.pattern
+def testRecord(r: Record): Boolean = {
+  r.groups == r.pattern
     .split('.')
     .filterNot(_.isBlank)
     .map(_.length)
     .toVector
-  if (condition) 1 else 0
 }
 
 def countSolutions(r: Record): Int = {
-  if (r.pattern.count(_ == '?') == 0) {
-    // pprintln(r.pattern)
-    // pprintln(testRecord(r))
-    evaluateRecord(r)
-  } else {
-    val operational = r.pattern.replaceFirst("\\?", "\\.")
-    val operationalCount = countSolutions(Record(operational, r.groups))
-    if (r.groups.sum == r.pattern.count(_ == '#')) {
-      operationalCount
-    } else {
-      val damaged = r.pattern.replaceFirst("\\?", "#")
-      val damagedCount = countSolutions(Record(damaged, r.groups))
-      operationalCount + damagedCount
-    }
-  }
+  val totalDamaged = r.groups.sum
+  val knownDamaged = r.pattern.count(_ == '#')
+  val unknownDamaged = totalDamaged - knownDamaged
+  val unknownIndices = r.pattern.zipWithIndex.filter(_._1 == '?').map(_._2)
+  // pprintln(totalDamaged)
+  // pprintln(knownDamaged)
+  // pprintln(unknownDamaged)
+  // pprintln(unknownIndices)
+
+  val combinations = unknownIndices.combinations(unknownDamaged)
+  // pprintln(combinations.toList)
+
+  val possibleCombinations = combinations
+    .map(combo => combo.foldLeft(r.pattern)((s, i) => s.updated(i, '#')).replaceAll("\\?", "\\."))
+    .filter(e => testRecord(Record(e, r.groups)))
+    .length
+
+  possibleCombinations
 }
+
+
 
 
 def part1() = {
@@ -43,13 +47,13 @@ def part1() = {
     .fromFile("./input/day12.txt")
     .getLines
     .filterNot(_.isBlank)
-    .toList
+    // .toList
 
   // pprintln(input)
 
   val result = input
     .map(parseLine)
-    // .take(5)
+    // .take(2)
     // .drop(1)
     .map(countSolutions)
     .sum
