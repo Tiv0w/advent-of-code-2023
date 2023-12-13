@@ -2,8 +2,7 @@ import scala.io.Source
 import pprint.pprintln
 
 
-
-case class Record(pattern: String, groups: Seq[Int])
+case class Record(pattern: String, groups: IndexedSeq[Int])
 
 
 def parseLine(s: String): Record  = {
@@ -11,50 +10,49 @@ def parseLine(s: String): Record  = {
   Record(pattern, groups.split(',').map(_.toInt).toIndexedSeq)
 }
 
-def testPossibility(s: String, groups: Seq[Int]): Boolean = {
-  s.split('.').map(_.length) == groups.toArray
+def evaluateRecord(r: Record): Int = {
+  val condition = r.groups == r.pattern
+    .split('.')
+    .filterNot(_.isBlank)
+    .map(_.length)
+    .toVector
+  if (condition) 1 else 0
 }
 
-def generatePossibilities(s: String, groups: Seq[Int]): Int = {
-  if (s.count(_ == '?') == 0) {
-    if (testPossibility(s, groups))
-      1
-    else
-      0
+def countSolutions(r: Record): Int = {
+  if (r.pattern.count(_ == '?') == 0) {
+    // pprintln(r.pattern)
+    // pprintln(testRecord(r))
+    evaluateRecord(r)
   } else {
-    val operational = s.replaceFirst("\\?", "\\.")
-    val damaged = s.replaceFirst("\\?", "#")
-
-    generatePossibilities(operational, groups) + generatePossibilities(damaged, groups)
+    val operational = r.pattern.replaceFirst("\\?", "\\.")
+    val operationalCount = countSolutions(Record(operational, r.groups))
+    if (r.groups.sum == r.pattern.count(_ == '#')) {
+      operationalCount
+    } else {
+      val damaged = r.pattern.replaceFirst("\\?", "#")
+      val damagedCount = countSolutions(Record(damaged, r.groups))
+      operationalCount + damagedCount
+    }
   }
 }
 
 
-def countSolutions(record: Record): Int = {
-  pprintln(record)
-
-  val pattern = record.pattern
-
-  pprintln(generatePossibilities(record.pattern, record.groups))
-
-
-  pprintln(pattern)
-  0
-}
-
 def part1() = {
   val input = Source
-    .fromFile("./examples/day12.txt")
+    .fromFile("./input/day12.txt")
     .getLines
     .filterNot(_.isBlank)
     .toList
 
-  pprintln(input)
+  // pprintln(input)
 
   val result = input
     .map(parseLine)
-    .take(2)
+    // .take(5)
+    // .drop(1)
     .map(countSolutions)
+    .sum
 
   pprintln(result)
 }
