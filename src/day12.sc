@@ -1,5 +1,8 @@
+// > using dep org.scala-lang.modules::scala-parallel-collections::1.0.4
+
 import scala.io.Source
-import pprint.pprintln
+// import scala.collection.parallel.CollectionConverters._
+// import pprint.pprintln
 
 
 case class Record(pattern: String, groups: IndexedSeq[Int])
@@ -58,10 +61,43 @@ def part1() = {
     .map(countSolutions)
     .sum
 
-  pprintln(result)
+  println(result)
 }
 
-part1()
+// part1()
+
+def unfoldRecord(r: Record): Record  = {
+  // pprintln(r)
+  val newPattern = Vector.fill(5)(r.pattern).mkString("?")
+  // pprintln(newPattern)
+  val newGroups = Vector.fill(5)(r.groups).flatten
+  // pprintln(newGroups)
+  Record(newPattern, newGroups)
+}
+
+
+def part2() = {
+  val input = Source
+    .fromFile("./examples/day12.txt")
+    .getLines
+    .filterNot(_.isBlank)
+    .toList
+
+  // pprintln(input)
+
+  val result = input
+    .map(parseLine)
+    .map(unfoldRecord)
+    // .take(2)
+    // .drop(1)
+    .map(countSolutions)
+    .sum
+
+  println(result)
+}
+
+part2()
+
 
 
 // pprintln(
